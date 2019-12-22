@@ -2,9 +2,9 @@ package p191;
 
 public class Course {
 	private String name;
-	private int score;
+	private Integer score;
 
-	public Course(String name, int score) {
+	public Course(String name, Integer score) {
 		super();
 		this.name = name;
 		this.score = score;

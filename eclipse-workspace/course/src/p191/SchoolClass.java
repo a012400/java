@@ -32,6 +32,12 @@ public class SchoolClass {
 		for (Student stu : students) {
 			stu.show();
 		}
+		System.out.println("选课统计结果为: ");
+		Map<Course, Integer> map = this.account();
+		Set<Course> courseSet = map.keySet();
+		for (Course course : courseSet) {
+			System.out.println(course.getName() + ":\t" + map.get(course) + "人");
+		}
 	}
 
 	public Map<Course, Integer> account() {
@@ -48,4 +54,5 @@ public class SchoolClass {
 		}
 		return map;
 	}
+
 }

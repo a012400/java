@@ -417,3 +417,78 @@ ArrayList和ArrayDeque两个集合类的实现机制基本相似，它们底层�
 
 因此程序中需要使用**栈**这种数据结构时，推荐使用ArrayDeque，尽量避免使用Stack——因为Stack是古老的集合，性能较差。
 
+### LinkedList实现类
+
+LinkedList类是List接口的实现类，可以根据索引来随机访问集合中的元素。除此之外，LinkedList还实现了Deque接口，可以被当成双端队列来使用，因此既可以被当成**栈**来使用，也可以当成**队列**使用。
+
+LinkedList与ArrayList、ArrayDeque的实现机制完全不同，ArrayList、ArrayDeque内部以**数组**的形式来保存集合中的元素，因此随机访问集合元素时有较好的性能；而LinkedList内部以**链表**的形式来保存集合中的元素，因此随机访问集合元素时性能较差，但在插入、删除元素时性能比较出色（只需改变指针所指的地址即可）。虽然Vector也是以**数组**的形式来存储集合元素的，但因为它实现了线程的**同步功能**（而且实现机制也不好），所以各方面性能都比较差。
+
+对于所有的内部基于数组的集合实现，例如ArrayList、ArrayDeque等，使用随机访问的性能比使用Iterator迭代访问的性能要好，因为随机访问会被映射成对数组元素的访问。
+
+### 各种线性表的性能分析
+
+Java提供的List就是一个线性表接口，而ArrayList、LinkedList又是线性表的两种典型实现：基于数组的线性表和基于链的线性表。Queue代表队列，Deque代表了双端队列（既可作为队列使用，也可作为栈使用）。
+
+一般来说，由于数组以一块**连续内存区**来保存所有的数组元素，所以数组在随机访问时性能最好，所有的内部以数组作为底层实现的集合在**随机访问**时性能都比较好；而内部以链表作为底层实现的集合在执行插入、删除操作时有较好的性能。但总体来说，ArrayList的性能比LinkedList的性能要好，因此大部分时候应该考虑使用ArrayList。
+
+关于使用List集合的建议。
+
+- 如果需要遍历List集合元素，对于ArrayList、Vector集合，应该使用随机访问方法（get）来遍历集合元素，这样性能更好；对于LinkedList集合，则应该采用迭代器（Iterator）来遍历集合元素。
+- 如果需要经常执行插入、删除操作来改变包含大量数据的List集合的大小，可考虑使用LinkedList集合。使用ArrayList、Vector集合可能需要经常重新分配内部数组的大小，效果可能较差。
+- 如果有多个线程需要同时访问List集合中的元素，可考虑使用Collections将集合包装成线程安全的集合。
+
+## Java8增强的Map集合
+
+Map用于保存具有映射关系的数据，因此Map集合里保存着两组值，一组值用于保存Map里的key，另外一组值用于保存Map里的value，key和value都可以是任何引用类型的数据。Map里的key不允许重复，即同一个Map对象的任何两个key通过`equals()`方法比较总是返回false。
+
+key和value之间存在单向一对一关系，即通过指定的key，总能找到唯一的、确定的value。
+
+如果把Map里的所有key放在一起来看，它们就组成了Set集合（所有的key没有顺序，key与key之间不能重复），实际上Map包含了一个`keySet()`方法，用于返回Map里的所有key组成的Set集合。
+
+Map里key集和Set集合里的元素的存储形式很像，Map子类和Set子类在名字上也惊人地相似，比如Set接口下有HashSet、LinkedHashSet、SortedSet（接口）、TreeSet、EnumSet等子接口和实现类，而Map接口下则有HashMap、LinkedHashMap、SortedMap（接口）、TreeMap、EnumMap等子接口和实现类。Map的这些实现类和子接口中key集的存储形式和对应Set集合中元素的存储形式完全相同。
+
+Set和Map之间的关系非常密切。虽然Map中存放的元素是key-value对，Set集合中放的元素是单个对象，但如果把key-value对中的value当成key的附庸：key在哪里，value就跟在哪里。Map提供了一个Entry内部类来封装key-value对，而计算Entry存储时则只考虑Entry封装的key。从Java源码来看，Java是先实现了Map，然后通过包装一个所有value都为null的Mao就实现了Set。
+
+如果把Map里的所有value放在一起来看，它们有非常类似于一个List：元素与元素之间可以重复，每个元素可以根据索引来查找，只是Map中的索引不再使用整数值，而是以另一个对象作为索引。Map有时也被称为字典，或关联数组。Map接口中定义了如下常用的方法。
+
+- `void clear()`：删除该Map对象中的所有key-value对。
+- `boolean containsKey(Object key)`：查询Map中是否包含指定的key，如果包含则返回true。
+- `boolean containsValue(Object value)`：查询Map中是否包含一个或多个value，如果包含则返回true。
+- `Set entrySet()`：返回Map中包含的key-value对所组成的Set集合，每个集合元素都是Map.Entry（Entry是Map的内部类）对象。
+- `Object get(Object key)`：返回指定key所对应的value；如果此Map中不包含该key，则返回null。
+- `boolean isEmpty()`：查询该Map是否为空（即不包含任何key-value对），如果为空则返回true。
+- `Set keySet()`：返回该Map中所有key组成的Set集合。
+- `Object put(Object key, Object value)`：添加一个key-value对，如果当前Map中已有一个与该key相等的key-value对，则新的key-value对会覆盖原来的key-value对。
+- `void putAll(Map m)`：将指定Map中的key-value对复制到本Map中。
+- `Object remove(Object key)`：删除指定key所对应的key-value对，返回删除key所关联的value，如果该key不存在，则返回null。
+- `Object remove(Object key, Object value)`：这是Java8新增的方法，删除指定key、value所对应的key-value对。如果该Map中成功地删除该key-value对，该方法返回true，否则返回false。
+- `int size()`：返回该Map里的key-value对的个数。
+- `Collection values()`：返回该Map里所有value组成的Collection。
+
+Map接口提供了大量的实现类，典型实现如**HashMap**和**Hashtable**等、HashMap的子类**LinkedHashMap**，还有SortedMap子接口及该接口的实现类**TreeMap**，以及**WeakHashMap**、**IdentityHashMap**等。
+
+Map里包括了一个内部类Entry，该类封装了一个key-value对。Entry包含如下三个方法。
+
+- `Object getKey()`：返回该Entry里包含的key值。
+- `Object getValue()`：返回该Entry里包含的value值。
+- `Object setValue(V value)`：设置该Entry里包含的value值，并返回新设置的value值。
+
+Map集合最典型的用法就是成对地添加、删除key-value对，接下来即可判断该Map中是否包含指定key，是否包含指定value，也可以通过Map提供的`keySet()`方法获取所有key组成的集合，进而遍历Map中所有的key-value对。
+
+添加key-value对时，Map允许多个value重复，但如果添加key-value对时Map中已有重复的key，那么新添加的value会覆盖原来对应的value，该方法会返回被覆盖的value。
+
+### Java8为Map新增的方法
+
+Java8除为Map增加了`remove(Object key, Object value)`默认方法之外，还增加了如下方法。
+
+- `Object compute(Object key, BiFunction remappingFunction)`：该方法使用remappingFunction根据**原key-value对**计算一个新的value。只要新的value不为null，就是用新的value**覆盖**原value；如果原value不为null，但新的value为null，则删除原key-value对；如果原value、新value同时为null，那么该方法不改变任何key-value对，直接返回null。
+- `Object computeIfAbsent(Object key, Function mappingFunction)`：如果传给该方法的key参数在Map中对应的value为null，则使用mappingFunction**根据key**计算一个新的结果，如果计算结果不为null，则用计算结果覆盖原有的value。如果原Map原来不包括该key，那么该方法可能会添加一组key-value。
+- `Object computeIfPresent(Object key, BiFunction remappingFcuntion)`：如果传给该方法的key参数在Map中对应的value不为null，该方法将使用remappingFunction根据**原key-value**计算一个新的结果，如果计算结果不为null，则使用该结果覆盖原来的value；如果计算结果为null，则删除原key-value对。
+- `void forEach(BiConsumer action)`：该方法是Java8为Map新增的一个遍历key-value对的方法，通过该方法可以更简洁地遍历Map的key-value对。
+- `Object getOrDefault(Object key, V defaultValue)`：获取指定key对应的value。如果该key不存在，则返回defaultValue。
+- `Object merge(Object key, Object value, BiFunction remappingFunction)`：该方法会根据key参数获取该Map中对应的value。如果获取的value为null，则直接用传入的value覆盖原有的value（在这种情况下，可能要添加一组key-value对）；如果获取的value不为null，则使用remappingFunction函数根据原value、新value计算一个新的结果，并用得到的结果去覆盖原有的value。
+- `Object putIfAbsent(Object key, Object value)`：该方法会自动检测指定key对应的value是否为null，如果该key对应的value为null，该方法会用新的value代替原来的null值。
+- `Object replace(Object key, Object value)`：将Map中指定key对应的value替换成新value。与传统`put()`方法不同的是，该方法不可能添加新的key-value对。如果尝试替换的key在原Map中不存在，该方法不会添加key-value，而是返回null。
+- `boolean replace(K key, V oldValue, V newValue)`：将Map中指定key-value对原value替换成新value。如果在Map中找到指定的key-value对，则执行替换并返回true，否则返回false。
+- `replaceAll(BiFunction function)`：该方法使用BiFunction对原key-value对执行计算，并将计算结果作为该key-value对的valu值。
+
