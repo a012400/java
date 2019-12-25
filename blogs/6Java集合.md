@@ -492,3 +492,205 @@ Java8除为Map增加了`remove(Object key, Object value)`默认方法之外，�
 - `boolean replace(K key, V oldValue, V newValue)`：将Map中指定key-value对原value替换成新value。如果在Map中找到指定的key-value对，则执行替换并返回true，否则返回false。
 - `replaceAll(BiFunction function)`：该方法使用BiFunction对原key-value对执行计算，并将计算结果作为该key-value对的valu值。
 
+### Java8改进的HashMap和Hashtable实现类
+
+HashMap和Hashtable都是Map接口的典型实现类，它们之间的关系完全类似于ArrayList和Vector的关系：Hashtable是一个古老的Map实现类，它从JDK1.0起就已经出现了，所以它包含了两个烦琐的方法，即`elements()`（类似于Map接口定义的`values()`方法）和`keys()`（类似于Map接口定义的`keySet()`方法），现在很少使用这两个方法。
+
+Java8改进了HashMap的实现，使用HashMap存在key冲突时依然具有较好的性能。
+
+除此之外，Hashtable和HashMap存在两点典型区别。
+
+- Hashtable是一个**线程安全**的Map实现，但HashMap是**线程不安全**的实现，所以HashMap比Hashtable的性能高一点；但如果有多个线程访问同一个Map对象时，使用Hashtable实现类会更好。
+- Hashtable不允许使用null作为key和value，如果试图把null值放进Hashtable中，将会引发NullPointerException异常；但HashMap可以使用null作为key或value。
+
+由于HashMap里的key不能重复，所以HashMap里最多只有一个key-value对key为null，但可以有无数多个key-value对的value为null。
+
+Hashtable是一个古老的类，它的命名甚至没有遵守Java的命名规范；与Vector类似的是，尽量少用Hashtable实现类，即使需要创建线程安全的Map实现类，也无须使用Hashtable实现类，可以通过Collections集合工具类把HashMap变成线程安全的。
+
+为了成功地在HashMap、Hashtable中存储、获取对象，用作key的对象必须实现`hashCode()`方法和`equals()`方法。
+
+与HashSet集合不能保证元素的顺序一样，HashMap、Hashtable也不能保证其中key-value对的顺序。类似于HashSet，HashMap、Hashtable判断两个key相等的标准也是：两个key通过`equals()`方法比较返回true，两个key的`hashCode()`值也相等。
+
+除此之外，HashMap、Hashtable中还包含一个`containsValue()`方法，用于判断是否包含指定的value。
+
+Hashtable判断value相等的标准是：value与另外一个对象通过`equals()`方法比较返回true即可。
+
+自定义类作为HashMap、Hashtable的key时，如果重写该类的`equals(Object obj)`和`hashCode()`方法，则应该保证两个方法判断标准一致——当两个key通过`equals()`方法比较返回true时，两个key的`hashCode()`返回值也应该相同。
+
+与HashSet类似的是，如果使用可变对象作为HashMap、Hashtable的key，并且程序修改了作为key的可变对象，则也可能出现于HashSet类似的情形：程序再无法准确访问到Map中被修改过的key。
+
+### LinkedHashMap实现类
+
+HashSet有一个LinkedHashSet子类，HashMap也有一个LinkedHashMap子类；LinkedHashMap也使用双向链表来维护key-value对的次序（其实只需要考虑key的次序），该链表复制维护Map的迭代顺序，迭代顺序与key-value对的插入顺序保持一致。
+
+LinkedHashMap可以避免对HashMap、Hashtable里的key-value对进行排序（只要插入key-value对时保持顺序即可），同时又可避免使用TreeMap所增加的成本。
+
+LinkedHashMap需要维护元素的插入顺序，因此性能略低于HashMap的性能；但因为它以链表来维护内部顺序，所以在迭代访问Map里的全部元素时将有较好的性能。
+
+### 使用Properties读写属性文件
+
+Properties类是Hashtable类的子类，该对象在处理**属性文件**时特别方便（Windows操作平台上的ini文件就是一种属性文件）。Properties类可以把Map对象和属性文件关联起来，从而把Map对象中的key-value对写入属性文件中，也可以把属性文件中的“属性名=属性值”加载到Map对象中。由于属性文件里的属性名、属性值都是字符串类型，所以Properties里的key、value都是字符串类型。该类提供了如下三个方法来修改Properties里的key、value值。Properties相当于一个key、value都是String类型的Map。
+
+- `String getProperty(String key)`：获取Properties中指定属性名对应的属性值，类似于Map的`get(Object key)`方法。
+- `String getProperty(String key, String defaultValue)`：如果Properties中不存在指定的key时，则该方法指定默认值。
+- `Object setProperty(String key, String value)`：设置属性值，类似于Hashtable的`put()`方法。
+
+除此之外，它还提供了两个读写属性文件的方法。
+
+- `void load(InputStream inStream)`：从属性文件（以输入流表示）中加载key-value对，把加载到key-value对追加到Properties里（Properties是Hashtable的子类，它不保证key-value对之间的次序）。
+- `void store(OutputStream out, String comments)`：将Properties中的key-value对输出到指定的属性文件（以输出流表示）中。
+
+### SortedMap接口和TreeMap实现类
+
+正如Set接口派生出SortedSet子接口，SortedSet接口有一个TreeSet实现类一样，Map接口也派生出一个SortedMap子接口，SortedMap接口也有一个TreeMap实现类。
+
+TreeMap就是一个红黑树数据结构，每个key-value对即作为红黑树的一个节点。TreeMap存储key-value对（节点）时，需要根据key对节点进行排序。TreeMap可以保证所有的key-value对处于有序状态。TreeMap也有两种排序方式。
+
+- 自然排序：TreeMap的所有key必须实现Comparable接口，而且所有的key应该是同一个类的对象，否则将抛出ClassCastException异常。
+- 定制排序：创建TreeMap时，传入一个Comparator对象，该对象负责对TreeMap中的所有key进行排序。采用定制排序时不要求Map的key实现Comparable接口。
+
+类似于TreeSet中判断两个元素相等的标准，TreeMap中判断两个key相等的标准是：两个key通过`compareTo()`方法时应保持一致的返回结果：两个key通过`equals()`方法比较返回true时，它们通过`compareTo()`方法比较应该返回0。如果`equals()`方法与`compareTo()`方法的返回结果不一致，TreeMap与Map接口的规则就会冲突。
+
+Set和Map的关系十分密切，Java源码就是先实现了HashMap、TreeMap等集合，然后通过包装一个所有的value都为null的Map集合实现了Set集合类。
+
+与TreeSet类似的是，TreeMap中也提供了一系列根据key顺序访问key-value对的方法。
+
+- `Map.Entry firstEntry()`：返回该Map中最小key所对应的key-value对，如果该Map为空，则返回null。
+- `Object firsrtKey()`：返回该Map中的最小key值，如果该Map为空，则返回null。
+- `Map.Entry lastEntry()`：返回该Map中最大key所对应的key-value对，如果该Map为空或不存在这样的key-value对，则返回null。
+- `Object lastKey()`：返回该Map中的最大key值，如果该Map为空或不存在这样的key-value对，则返回null。
+- `Map.Entry higherEntry(Object key)`：返回该Map中位于key后一位的key-value对（即大于指定key的最小key所对应的key-value对）。如果该Map为空，则返回null。
+- `Object higherKey(Object key)`：返回该Map中位于key后一位的key值（即大于指定key的最小key值）。如果该Map为空或不存在这样的key-value对，则都返回null。
+- `Map.Entry lowerEntry(Object key)`：返回该Map中位于key前一位的key-value对（即小于指定key的最大key所对应的key-value对）。如果该Map为空或不存在这样的key-value对，则返回null。
+- `Object lowerKey(Object key)`：返回该Map中位于key前一位的key值（即小于指定key的最大key值）。如果该Map为空或不存在这样的key-value对，则都返回null。
+- `NavigableMap subMap(Object fromKey, boolean fromInclusive, Object toKey, boolean toInclusive)`：返回该Map的子Map，其key的范围是从fromKey（是否包括取决于第二个参数）到toKey（是否包括取决于第四个参数）。
+- `SortedMap subMap(Object key, Object toKey)`：返回该Map的子Map，其key的范围是从fromKey（包括）到toKey（不包括）。
+- `SortedMap tailMap(Object fromKey)`：返回该Map的子Map，其key的范围是大于fromKey（包括）到所有key。
+- `NavigableMap tailMap(Object fromKey, boolean inclusive)`：返回该Map的子Map，其key的范围是大于fromKey（是否包括取决于第二个参数）的所有key。
+- `SortedMap headMap(Object toKey)`：返回该Map的子Map，其key的范围是小于toKey（不包括）的所有key。
+- `NavigableMap headMap(Object toKey, boolean inclusive)`：返回该Map的子Map，其key的范围是小于toKey（是否包括取决于第二个参数）的所有key。
+
+### WeakHashMap实现类
+
+WeakHashMap与HashMap的用法基本相似。与HashMap的区别在于，HashMap的key保留了对实际对象的**强引用**，这意味着只要该HashMap对象不被销毁，该HashMap的所有key所引用的对象就不会被垃圾回收，HashMap也不会自动删除这些key所对应的key-value对；但WeakHashMap的key只保留了对实际对象的**弱引用**，这意味着如果WeakHashMap对象的key所引用的对象没有被其他强引用变量所引用，则这些key所引用的对象可能被垃圾回收，WeakHashMap也可能自动删除这些key所对应的key-value对。
+
+WeakHashMap中的每个key对象只持有对实际对象的弱引用，因此，当垃圾回收了该key所对应的实际对象之后，WeakHashMap会自动删除该key对应的key-value对。
+
+如果需要使用WeakHashMap的key来保留对象的弱引用，则不要让该key所引用的对象具有任何强引用，否则将失去WeakHashMap的意义。
+
+### IdentityHashMap实现类
+
+这个Map实现类的实现机制与HashMap基本相似，但它在处理两个key相等时比较特殊：在IndentityHashMap中，当且仅当两个key**严格相等**（key1==key2)时，IdentityHashMap才认为两个key相等；对于普通的HashMap而言，只要key1和key2通过`equals()`方法比较返回true，且它们的hashCode值相等即可。
+
+IdentityHashMap提供了与HashMap基本相似的方法，也允许使用null作为key和value。与HashMap相似：IdentityHashMap也不保证key-value对之间的顺序，更不能保证它们的顺序随时间的推移保持不变。
+
+### EnumMap实现类
+
+EnumMap是一个与枚举类一起使用的Map实现，EnumMap中的所有key都必须是单个枚举类的枚举值。创建EnumMap时必须显示或隐式指定它对应的枚举类。EnumMap具有如下特征。
+
+- EnumMap在内部以**数组形式**保存，所以这种实现形式非常紧凑、高效。
+- EnumMap根据key的自然顺序（即枚举值在枚举类中的定义顺序）来维护key-value对的顺序。当程序通过`keySet()`、`entrySet()`、`values()`等方法遍历EnumMap时可以看到这种顺序。
+- EnumMap不允许使用null作为key，但允许使用null作为value。如果试图使用null作为key时将抛出NullPointerException异常。如果只是查询是否包含值为null的key，或只是删除值为null的key，都不会抛出异常。
+
+与创建普通的Map所有区别的是，创建EnumMap时必须指定一个枚举类，从而将该EnumMap和指定枚举类关联起来。
+
+### 各Map实现类的性能分析
+
+对于Map常用实现类而言，虽然HashMap和Hashtable的实现机制几乎一样，但由于Hashtable是一个古老的、线程安全的集合，因此HashMap通常比Hashtable要快。
+
+TreeMap通常比HashMap、Hashtable要慢（尤其在插入、删除key-value对时更慢），因为TreeMap底层采用红黑树来管理key-value对（红黑树的每个结点就是一个key-value对）。
+
+使用TreeMap有一个好处：TreeMap中的key-value对总是处于有序状态，无序专门进行排序操作。当TreeMap被填充之后，就可以调用`keySet()`，取得由key组成的Set，然后使用`toArray()`方法生成key的数组，接下来使用Arrays的`binarySearch()`方法在已排序的数组中快速地查询对象。
+
+对于一般的应用场景，程序应该多考虑使用HashMap，因为HashMap正是为快速查询设计的（HashMap底层其实也是采用数组来存储key-value对）。但如果程序需要一个总是排好序的Map时，则可以考虑使用TreeMap。
+
+LinkedHashMap比HashMap慢一点，因为它需要维护链表来保持Map中的key-value时的添加顺序。IdentityHashMap性能没有特别出色之处，因为它采用HashMap基本相似的实现，只是它使用`==`而不是`equals()`方法来判断元素相等。EnumMap的性能最好，但它只能使用同一个枚举类的枚举值作为key。
+
+## HashSet和HashMap的性能选项
+
+对于HashSet及其子类而言，他们采用hash算法来决定集合中元素的存储位置，并通过hash算法来控制集合的大小；对于HashMap、Hashtable及其子类而言，它们采用hash算法来决定Map中key的存储，并通过hash算法来增加key集合的大小。
+
+hsh表里可以存储元素的位置被称为**桶**（bucket），在通常情况，单个“桶”里存储一个元素，此时有最好的性能：hash算法可以根据hashCode值计算出“桶”存储位置，接着从“桶”中取出元素。但hahs表的状态时open的：在发生**hash冲突**的情况下，单个桶会存储多个元素。这些元素以链表形式存储。
+
+因为HashSet和HashMap、Hashtable都是用hash算法来决定其元素（HashMap则只考虑key）的存储，因此HashSet、HashMap的hash表包含如下属性。
+
+- 容量（capacity）：hash表中桶的数量
+- 初始化容量（initial capacity）：创建hash表时桶的数量。HashMap和HashSet都允许在构造器中指定初始化容量。
+- 尺寸（size）：当前hash表中记录的数量。
+- 负载因子（load factor）：负载因子等于**size/capacity**。负载因子为0时，表示空的hash表，0.5表示半满的hash表，以此类推。轻负载的hash表具有冲突少、适宜插入与查询的特点（但是使用Iterator迭代元素时比较慢）。
+
+除此之外，hash表里还有一个**负载极限**，负载极限是一个0~1的数值，负载极限决定了hash表的最大填满程度。当hash表中的负载因子达到指定的负载极限时，hash表会自动成倍地增加容量（桶的数量），并将原有的对象重新分配，放入新的桶内，这称为**rehashing**。
+
+HashSet和HashMap、Hashtable的构造器允许指定一个负载极限，HashSet和HashMap、Hashtable默认的负载极限为0.75。
+
+负载极限的默认值（0.75）是时间和空间成本上的一种折中：较高的负载极限可以降低hash表所占用的内存空间，但会增加查询数据的时间开销，而查询是最频繁的操作（HashMap的`get()`与`put()`方法都要用到查询）；较低的负载极限会提高查询数据的性能，但会增加hash表所占用的内存开销。
+
+如果开始就知道HashSet和HashMap、Hashtable会保存很多记录，则可以在创建时就是用较大的初始化容量，如果初始化容量始终大于HashSet和HashMap、Hashtable所包含的最大记录数除以负载极限，就不会发生rehashing，使用足够大的初始化容量创建HashSet和HashMap、Hashtable时，可以更高效地增加记录，当将初始化容量设置太高可能会浪费空间。
+
+## 操作集合的工具类：Collections
+
+Java提供了一个操作Set、List和Map等集合的工具类：Collctions，该工具类里提供了大量方法对集合元素进行排序、查询和修改等操作。
+
+### 排序操作
+
+Collections提供了如下常用的类方法用于对List集合元素进行排序。
+
+- `void reverse(List list)`：反转指定List集合中的元素顺序。
+- `void shuffle(List list)`：对List集合元素进行随机排序（shuffle方法模拟了”洗牌“动作）。
+- void sort(List list)`：根根据元素的自然顺序对指定List集合的元素按升序进行排序。
+- `void sort(List list, Comparator c)`：根据指定Comparator产生的顺序对List集合元素进行排序。
+- `void swap(List list, int i, int j)`：将指定List集合中的i处元素和j处元素进行交换。
+- `void rotate(List list, int distance)`：当distance为正数时，将list集合的后distance个元素”整体“移到前面；当distance为负数时，将list集合的前distance个元素”整体“移到后面。
+
+### 查找、替换操作
+
+Collections还提供了如下常用的用于查找、替换集合元素的类方法。
+
+- `int binarySearch(List list, Object key)`：使用二分搜索法搜索指定的List集合，以获得指定对象在List集合中的索引。如果要使用该方法可以正常工作，则必须保证List中的元素已经处于有序状态。
+- `Object max(Collection coll)`：根据元素的自然排序，返回给定集合中的最大元素。
+- `Object max(Collection coll, Comparator comp)`：根据Comparator指定的顺序，返回给定集合中的最大元素。
+- `Object min(Collection coll)`：根据元素的自然排序，返回给定集合中的最小元素。
+- `Object min(Collection coll, Comparator comp)`：根据Comparator指定的顺序，返回给定集合中的最小元素。
+- `void fill(List list, Object obj)`：使用指定元素obj替换指定List集合中的所有元素。
+- `int frequency(Collection c, Object o)`：返回指定集合中指定元素的出现次数。
+- `int indexOfSubList(List source, List target)`：返回子List对象在父List对象中第一次出现的位置索引；如果父List中没有出现这样的子List，则返回-1。
+- `int lastIndexOfSubList(List source, List target)`：返回子List对象在父List对象中最后一次出现的位置索引；如果父List中没有出现这样的子List，则返回-1。
+- `bollean replaceAll(List list, Object oldVal, Object newVal)`：使用一个新值newVal替换List对象的所有旧值oldVal。
+
+### 同步控制
+
+Collections类中提供了多个`synchronizedXxx()`方法，该方法将指定集合包装成线程同步的集合，从而可以解决多线程并发访问集合时的线程安全问题。
+
+Java中常用的集合框架中的实现类HashSet、TreeSet、ArrayList、ArrayDeque、LinkedList、HashMap和TreeMap都是**线程不安全**的。如果有多个线程访问它们，而且有超过一个的线程试图修改它们，则存在线程安全的问题。Collections提供了多个类方法可以把它们包装成线程同步的集合。
+
+### 设置不可变集合
+
+COllections提供了如下三类方法来返回一个不可变的集合。
+
+- `emptyXxx()`：返回一个空的、不可变的集合对象，此处的集合既可以是List，也可以是SortedSet、Set，还可以是Map、SortedMap等。
+- `singletonXxx()`：返回一个只包含指定对象（只有一个或一项元素）的、不可变的集合对象，此处的集合既可以是List，还可以是Map。
+- `unmodifiableXxx()`：返回指定集合对象的不可变试图，此处的集合既可以是List，也可以是Set、SortedSet，还可以是Map、SortedMap等。
+
+上面三类方法的参数是原有的集合对象，返回值是该集合的**只读**版本。
+
+### Java9新增的不可变集合
+
+Java9以前要创建一个包含6个元素的Set集合，程序需要先创建Set集合，然后6次调用`add()`方法向Set集合中添加元素。Java9对此进行了简化，程序直接调用Set、List、Map的`of()`方法即可创建包含N个元素的不可变的集合。
+
+不可变意味着程序不能向集合中添加元素，也不能从集合中删除元素。
+
+创建不可变的Map集合有两个方法：使用`of()`类方法时只要依次传入多个key-value对即可；还可使用`ofEntries()`类方法，该方法可接受多个Entry对象，因此程序显示使用`Map.entry()`方法来创建Map.Entry对象。
+
+## 烦琐的接口：Enumeration
+
+Enumeration接口是Iterator迭代器的**古老版本**，从JDK1.0开始，Enumeration接口就已经存在了（Iterator从JDK1.2出现）。Enumeration接口只有两个名字很长的方法。
+
+- `boolean hasMoreElements()`：如果次迭代器还有剩下的元素，则返回true。
+- `Object nextElement()`：返回该迭代器的下一个元素，如果还有的话（否则将抛出异常）。
+
+Enumeration接口中的方法名称冗长，难以记忆，而且没有提供Iterator的`remove()`方法。如果现在编写Java程序，应该尽量采用Iterator迭代器。
+
+Java之所以保留Enumeration接口，主要是为了照顾以前那些“古老”的程序，那些程序里大量使用了Enumeration接口，如果新版本的Java里直接删除Enumeration接口，将会导致那些程序全部出错。在计算机行业有一条规则：加入任何规则都必须谨慎，因为以后无法删除规则。
+
+实际上，Vector（包括其子类Stack）、Hashtable两个集合类，以及另一个极少使用的BitSet，都是从JDK1.0遗留下来的集合类，而Enumeration接口可用于遍历这些“古老”的集合类。对于ArrayList、HashMap等集合类，不再支持使用Enumeration。
+
