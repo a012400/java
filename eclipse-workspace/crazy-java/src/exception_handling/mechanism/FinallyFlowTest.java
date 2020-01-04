@@ -16,5 +16,4 @@ public class FinallyFlowTest {
 			return false;
 		}
 	}
-
 }
